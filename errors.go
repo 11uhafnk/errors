@@ -189,6 +189,10 @@ func Wrap(err error, message string) error {
 		cause: err,
 		msg:   message,
 	}
+	var st stackTracer
+	if As(err, &st) {
+		return err
+	}
 	return &withStack{
 		err,
 		callers(),
@@ -202,14 +206,7 @@ func Wrapf(err error, format string, args ...interface{}) error {
 	if err == nil {
 		return nil
 	}
-	err = &withMessage{
-		cause: err,
-		msg:   fmt.Sprintf(format, args...),
-	}
-	return &withStack{
-		err,
-		callers(),
-	}
+	return Wrap(err, fmt.Sprintf(format, args...))
 }
 
 // WithMessage annotates err with a new message.
@@ -251,8 +248,8 @@ func (w *withMessage) Format(s fmt.State, verb rune) {
 	switch verb {
 	case 'v':
 		if s.Flag('+') {
+			io.WriteString(s, w.msg+":\n")
 			fmt.Fprintf(s, "%+v\n", w.Cause())
-			io.WriteString(s, w.msg)
 			return
 		}
 		fallthrough

@@ -152,6 +152,10 @@ func (s *stack) Format(st fmt.State, verb rune) {
 	}
 }
 
+type stackTracer interface {
+	StackTrace() StackTrace
+}
+
 func (s *stack) StackTrace() StackTrace {
 	f := make([]Frame, len(*s))
 	for i := 0; i < len(f); i++ {
